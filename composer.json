@@ -1,0 +1,44 @@
+{
+    "name": "bphlxv/ganisph",
+    "description": "GANISPH — Sistem Informasi Penugasan dan Telaahan (CodeIgniter 4, SQLite, Excel, DOCX)",
+    "license": "MIT",
+    "type": "project",
+    "homepage": "https://github.com/bphlxv/ganisph",
+    "support": {
+        "issues": "https://github.com/bphlxv/ganisph/issues",
+        "source": "https://github.com/bphlxv/ganisph"
+    },
+    "require": {
+        "php": "^8.2",
+        "codeigniter4/framework": "^4.7",
+        "phpoffice/phpspreadsheet": "^5.1",
+        "phpoffice/phpword": "^1.4"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.9",
+        "mikey179/vfsstream": "^1.6",
+        "phpunit/phpunit": "^10.5.16"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Config\\": "app/Config/"
+        },
+        "exclude-from-classmap": [
+            "**/Database/Migrations/**"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Support\\": "tests/_support"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
