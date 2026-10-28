@@ -140,3 +140,6 @@ _modules/*
 
 /results/
 /phpunit.xml
+
+# Dokumen sumber pengguna (data pribadi dan template bertanda tangan)
+/dokumen/

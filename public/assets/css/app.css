@@ -738,6 +738,64 @@ body {
     border-right: 0;
 }
 
+.per-page-form {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--ganisph-muted);
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.per-page-form .form-control {
+    width: 82px;
+}
+
+.pagination {
+    margin-bottom: 0;
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+}
+
+.pagination .page-link {
+    min-width: 32px;
+    text-align: center;
+    border-radius: 8px;
+    margin: 0 2px;
+    border-color: var(--ganisph-border);
+    color: #145ea8;
+}
+
+.pagination .page-item.active .page-link {
+    background: #145ea8;
+    border-color: #145ea8;
+    color: #ffffff;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: var(--ganisph-muted);
+    background: transparent;
+}
+
+[data-bs-theme="dark"] .pagination .page-link {
+    background: transparent;
+    border-color: var(--ganisph-border-strong);
+    color: #93c5fd;
+}
+
+[data-bs-theme="dark"] .pagination .page-item.active .page-link {
+    background: #145ea8;
+    border-color: #145ea8;
+    color: #ffffff;
+}
+
+@media (max-width: 575.98px) {
+    .per-page-form {
+        flex-wrap: wrap;
+        white-space: normal;
+    }
+}
+
 .app-table {
     --bs-table-bg: transparent;
     margin-bottom: 0;
@@ -763,6 +821,27 @@ body {
 
 .app-table > tbody > tr:last-child > td {
     border-bottom: 0;
+}
+
+.telaahan-table {
+    min-width: 1180px;
+}
+
+.table-scroll-top {
+    display: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 16px;
+    background: var(--ganisph-soft);
+    border-bottom: 1px solid var(--ganisph-border);
+}
+
+.table-scroll-top.is-scrollable {
+    display: block;
+}
+
+.table-scroll-top-inner {
+    height: 1px;
 }
 
 .app-table .cell-main {
@@ -1110,6 +1189,11 @@ body {
     color: #7c3aed;
 }
 
+.quick-icon-green {
+    background: rgba(22, 163, 74, 0.1);
+    color: #16a34a;
+}
+
 [data-bs-theme="dark"] .quick-icon-blue {
     color: #93c5fd;
 }
@@ -1120,6 +1204,10 @@ body {
 
 [data-bs-theme="dark"] .quick-icon-violet {
     color: #c4b5fd;
+}
+
+[data-bs-theme="dark"] .quick-icon-green {
+    color: #86efac;
 }
 
 .quick-copy {

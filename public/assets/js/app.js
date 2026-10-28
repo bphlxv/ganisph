@@ -532,6 +532,55 @@
     });
 
     /* ----------------------------------------------------------------------
+       Scrollbar atas/bawah tabel
+       ---------------------------------------------------------------------- */
+
+    $all('[data-scroll-top]').forEach((topBar) => {
+        const targetId = topBar.getAttribute('data-scroll-target');
+        const body = targetId ? document.getElementById(targetId) : null;
+        const spacer = $one('.table-scroll-top-inner', topBar);
+
+        if (!body || !spacer) {
+            return;
+        }
+
+        const refresh = () => {
+            const scrollable = body.scrollWidth > body.clientWidth + 1;
+            topBar.classList.toggle('is-scrollable', scrollable);
+            spacer.style.width = `${body.scrollWidth}px`;
+        };
+
+        refresh();
+        window.addEventListener('resize', refresh);
+
+        if (window.ResizeObserver) {
+            new window.ResizeObserver(refresh).observe(body);
+        }
+
+        let syncing = false;
+
+        topBar.addEventListener('scroll', () => {
+            if (syncing) {
+                return;
+            }
+
+            syncing = true;
+            body.scrollLeft = topBar.scrollLeft;
+            syncing = false;
+        });
+
+        body.addEventListener('scroll', () => {
+            if (syncing) {
+                return;
+            }
+
+            syncing = true;
+            topBar.scrollLeft = body.scrollLeft;
+            syncing = false;
+        });
+    });
+
+    /* ----------------------------------------------------------------------
        Grafik dashboard
        ---------------------------------------------------------------------- */
 

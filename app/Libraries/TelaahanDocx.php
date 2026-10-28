@@ -2,21 +2,34 @@
 
 namespace App\Libraries;
 
-use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\PhpWord;
+use DOMDocument;
+use DOMXPath;
+use PhpOffice\PhpWord\Settings as PhpWordSettings;
 use PhpOffice\PhpWord\TemplateProcessor;
 use RuntimeException;
+use Throwable;
+use ZipArchive;
 
 /**
- * Membuat template dan dokumen telaahan penugasan berformat DOCX.
+ * Menyiapkan template DOCX pengguna dan mengisi field telaahan penugasan.
+ *
+ * Template sumber memakai mail merge Word dengan tampilan «NAMA», «TANGGAL»,
+ * dan seterusnya. Saat disiapkan, struktur mail merge dilepas dan placeholder
+ * diubah menjadi ${NAMA}, ${TANGGAL}, ... agar dapat diisi oleh PhpWord.
  */
 class TelaahanDocx
 {
     private string $templatePath;
+    private string $sourcePath;
 
-    public function __construct(?string $templatePath = null)
+    public function __construct(?string $templatePath = null, ?string $sourcePath = null)
     {
-        $this->templatePath = $templatePath ?? ganisph_config()->telaahanTemplate;
+        $config = ganisph_config();
+
+        $this->templatePath = $templatePath ?? $config->telaahanTemplate;
+        $this->sourcePath   = $sourcePath ?? $config->sourceTemplate;
+
+        $this->configureTempDir();
     }
 
     public function templatePath(): string
@@ -24,156 +37,37 @@ class TelaahanDocx
         return $this->templatePath;
     }
 
+    public function sourcePath(): string
+    {
+        return $this->sourcePath;
+    }
+
     public function ensureTemplate(): void
     {
-        if (is_file($this->templatePath)) {
+        $hasTemplate = is_file($this->templatePath);
+        $hasSource   = is_file($this->sourcePath);
+
+        if ($hasTemplate && (! $hasSource || filemtime($this->templatePath) >= filemtime($this->sourcePath))) {
             return;
         }
 
-        $directory = dirname($this->templatePath);
-        if (! is_dir($directory) && ! mkdir($directory, 0775, true) && ! is_dir($directory)) {
-            throw new RuntimeException('Folder template tidak dapat dibuat.');
+        if (! $hasSource) {
+            if ($hasTemplate) {
+                return;
+            }
+
+            throw new RuntimeException('Template sumber DOCX tidak ditemukan: ' . $this->sourcePath);
         }
 
-        $phpWord = new PhpWord();
-        $phpWord->getDocInfo()
-            ->setCreator('GANISPH')
-            ->setTitle('Template Telaahan Penugasan GANISPH')
-            ->setDescription('Template resmi telaahan penugasan GANISPH.');
-
-        $phpWord->setDefaultFontName('Times New Roman');
-        $phpWord->setDefaultFontSize(11);
-
-        $section = $phpWord->addSection([
-            'marginTop'    => 1800,
-            'marginBottom' => 1600,
-            'marginLeft'   => 1800,
-            'marginRight'  => 1800,
-        ]);
-
-        $section->addText('GANISPH', [
-            'name' => 'Times New Roman',
-            'size' => 16,
-            'bold' => true,
-            'color' => '123B6D',
-            'allCaps' => true,
-        ], ['alignment' => 'left', 'spaceAfter' => 0]);
-
-        $section->addText('Sistem Informasi Penugasan dan Telaahan', [
-            'name' => 'Times New Roman',
-            'size' => 9,
-            'color' => '4B5563',
-        ], ['spaceAfter' => 40]);
-
-        $line = $section->addText('', ['size' => 2], [
-            'borderBottomSize' => 12,
-            'borderBottomColor' => '123B6D',
-            'spaceAfter' => 260,
-        ]);
-
-        $section->addText('TELAAHAN PENUGASAN GANISPH', [
-            'name' => 'Times New Roman',
-            'size' => 14,
-            'bold' => true,
-        ], ['alignment' => 'center', 'spaceAfter' => 40]);
-
-        $section->addText('Nomor: ${NOMOR_TELAAHAN}', [
-            'name' => 'Times New Roman',
-            'size' => 11,
-        ], ['alignment' => 'center', 'spaceAfter' => 260]);
-
-        $section->addText(
-            'Berdasarkan Surat Tugas Nomor ${NOMOR_SURAT} tanggal ${TANGGAL_SURAT}, telah dilakukan telaahan terhadap penugasan GANISPH dengan data sebagai berikut:',
-            ['name' => 'Times New Roman', 'size' => 11],
-            ['alignment' => 'both', 'spaceAfter' => 200, 'lineHeight' => 1.15]
-        );
-
-        $table = $section->addTable([
-            'borderSize' => 6,
-            'borderColor' => 'B8C4D2',
-            'cellMargin' => 90,
-            'alignment' => 'center',
-            'width' => 9200,
-        ]);
-
-        $this->addDataRow($table, 'Nama Pegawai', '${NAMA}');
-        $this->addDataRow($table, 'NIP', '${NIP}');
-        $this->addDataRow($table, 'Jabatan', '${JABATAN}');
-        $this->addDataRow($table, 'Nomor Surat Tugas', '${NOMOR_SURAT}');
-        $this->addDataRow($table, 'Tanggal Surat Tugas', '${TANGGAL_SURAT}');
-        $this->addDataRow($table, 'Nama Kegiatan', '${KEGIATAN}');
-        $this->addDataRow($table, 'Peran dalam Penugasan', '${PERAN}');
-        $this->addDataRow($table, 'Penyelenggara', '${PENYELENGGARA}');
-        $this->addDataRow($table, 'Lokasi', '${LOKASI}');
-        $this->addDataRow($table, 'Waktu Pelaksanaan', '${PERIODE}');
-        $this->addDataRow($table, 'Status', '${STATUS}');
-        $this->addDataRow($table, 'Keterangan', '${KETERANGAN}');
-
-        $section->addText('', ['size' => 4], ['spaceAfter' => 120]);
-
-        $section->addText('Hasil Telaahan', [
-            'name' => 'Times New Roman',
-            'size' => 11,
-            'bold' => true,
-        ], ['spaceAfter' => 80]);
-
-        $section->addText(
-            'Penugasan GANISPH sebagaimana tercantum di atas telah ditelaah sesuai dengan data penugasan yang tersimpan pada sistem. ${CATATAN_TELAAHAN}',
-            ['name' => 'Times New Roman', 'size' => 11],
-            ['alignment' => 'both', 'spaceAfter' => 220, 'lineHeight' => 1.15]
-        );
-
-        $section->addText(
-            'Demikian telaahan penugasan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.',
-            ['name' => 'Times New Roman', 'size' => 11],
-            ['alignment' => 'both', 'spaceAfter' => 320, 'lineHeight' => 1.15]
-        );
-
-        $signature = $section->addTable([
-            'borderSize' => 0,
-            'cellMargin' => 0,
-            'alignment' => 'right',
-            'width' => 9100,
-        ]);
-        $signature->addRow();
-        $signature->addCell(5300);
-        $cell = $signature->addCell(3800);
-        $cell->addText('${TANGGAL_TELAAHAN}', [
-            'name' => 'Times New Roman',
-            'size' => 11,
-        ], ['alignment' => 'left', 'spaceAfter' => 100]);
-        $cell->addText('Pejabat yang Menelaah,', [
-            'name' => 'Times New Roman',
-            'size' => 11,
-        ], ['alignment' => 'left', 'spaceAfter' => 500]);
-        $cell->addText('${PEJABAT_NAMA}', [
-            'name' => 'Times New Roman',
-            'size' => 11,
-            'bold' => true,
-            'underline' => 'single',
-        ], ['alignment' => 'left', 'spaceAfter' => 0]);
-        $cell->addText('NIP. ${PEJABAT_NIP}', [
-            'name' => 'Times New Roman',
-            'size' => 11,
-        ], ['alignment' => 'left', 'spaceAfter' => 0]);
-
-        $footer = $section->addFooter();
-        $footer->addPreserveText(
-            'Dokumen Telaahan Penugasan GANISPH  |  Halaman {PAGE} dari {NUMPAGES}',
-            ['name' => 'Times New Roman', 'size' => 8, 'color' => '6B7280'],
-            ['alignment' => 'center']
-        );
-
-        $writer = IOFactory::createWriter($phpWord, 'Word2007');
-        $writer->save($this->templatePath);
-        @chmod($this->templatePath, 0664);
+        $this->convertTemplate();
     }
 
     /**
      * Membuat dokumen telaahan terisi untuk satu data penugasan.
      *
      * @param array<string, mixed>      $penugasan
-     * @param array<string, mixed>|null $official
+     * @param array<string, mixed>|null $official Tidak dipakai; tanda tangan pada
+     *                                             template pengguna bersifat tetap.
      */
     public function render(array $penugasan, ?array $official = null): string
     {
@@ -184,90 +78,202 @@ class TelaahanDocx
             throw new RuntimeException('Folder dokumen telaahan tidak dapat dibuat.');
         }
 
-        $safeName = preg_replace('/[^A-Za-z0-9_-]+/', '_', (string) ($penugasan['nama_pegawai'] ?? 'pegawai'));
-        $fileName = 'Telaahan_GANISPH_' . date('Ymd_His') . '_' . $safeName . '_' . (int) $penugasan['id'] . '.docx';
-        $output   = $directory . DIRECTORY_SEPARATOR . $fileName;
-
-        $official = $official ?? [];
-        $keterangan = trim((string) ($penugasan['keterangan'] ?? ''));
-        if ($keterangan === '') {
-            $keterangan = 'Tidak ada catatan tambahan.';
+        $safeName = preg_replace('/[^A-Za-z0-9_-]+/', '_', (string) ($penugasan['nama'] ?? 'ganisph'));
+        $safeName = trim((string) $safeName, '_');
+        if ($safeName === '') {
+            $safeName = 'ganisph';
         }
 
-        $catatan = ($penugasan['status'] ?? '') === 'Selesai'
-            ? 'Penugasan telah selesai dilaksanakan dan seluruh data telah sesuai.'
-            : 'Penugasan masih berjalan dan data yang tercantum telah sesuai dengan surat tugas.';
+        $fileName = 'Telaahan_GANISPH_' . date('Ymd_His') . '_' . $safeName . '_' . (int) ($penugasan['id'] ?? 0) . '.docx';
+        $output   = $directory . DIRECTORY_SEPARATOR . $fileName;
 
         $values = [
-            'NOMOR_TELAAHAN'   => $this->nomorTelaahan($penugasan),
-            'NOMOR_SURAT'      => (string) ($penugasan['nomor_surat'] ?? '-'),
-            'TANGGAL_SURAT'    => tanggal_id($penugasan['tanggal_surat'] ?? null),
-            'NAMA'             => (string) ($penugasan['nama_pegawai'] ?? '-'),
-            'NIP'              => (string) ($penugasan['nip'] ?? '-'),
-            'JABATAN'          => (string) ($penugasan['jabatan'] ?? '-'),
-            'KEGIATAN'         => (string) ($penugasan['nama_kegiatan'] ?? '-'),
-            'PERAN'            => (string) ($penugasan['peran'] ?? '-'),
-            'PENYELENGGARA'    => (string) ($penugasan['penyelenggara'] ?? '-'),
-            'LOKASI'           => (string) ($penugasan['lokasi'] ?? '-'),
-            'PERIODE'          => periode_penugasan($penugasan['tanggal_mulai'] ?? null, $penugasan['tanggal_selesai'] ?? null),
-            'STATUS'           => (string) ($penugasan['status'] ?? 'Aktif'),
-            'KETERANGAN'       => $keterangan,
-            'CATATAN_TELAAHAN' => $catatan,
-            'TANGGAL_TELAAHAN' => tanggal_id(date('Y-m-d')),
-            'PEJABAT_NAMA'     => (string) ($official['nama'] ?? 'Administrator'),
-            'PEJABAT_NIP'      => (string) ($official['nip'] ?? '-'),
+            'PERUSAHAAN_'            => $this->value($penugasan, 'perusahaan'),
+            'ENTT'                   => $this->value($penugasan, 'entt'),
+            'TANGGAL'                => $this->dateValue($penugasan['tanggal'] ?? null),
+            'NAMA'                   => $this->value($penugasan, 'nama'),
+            'NO_REG'                 => $this->value($penugasan, 'no_reg'),
+            'MASA_BERLAKU'           => $this->value($penugasan, 'masa_berlaku'),
+            'KUALIFIKASI1'           => $this->value($penugasan, 'kualifikasi'),
+            'KUALIFIKASI'            => $this->value($penugasan, 'kualifikasi_singkat'),
+            'KABKOTA'                => $this->value($penugasan, 'kabkota'),
+            'PROVINSI'               => $this->value($penugasan, 'provinsi'),
+            'JANGKA_WAKTU_PENUGASAN' => $this->value($penugasan, 'jangka_waktu'),
+            'JENIS_IZIN1'            => $this->value($penugasan, 'jenis_izin'),
+            'JENIS_IZIN'             => $this->value($penugasan, 'jenis_izin_singkat'),
+            'PEMBERI_IZIN'           => $this->value($penugasan, 'pemberi_izin'),
+            'NO_IZIN'                => $this->value($penugasan, 'no_izin'),
+            'TANGGAL1'               => $this->dateValue($penugasan['tanggal_izin'] ?? null),
+            'KAPASITAS_IZIN'         => $this->value($penugasan, 'kapasitas_izin'),
+            'STATUS_GANISPH'         => $this->value($penugasan, 'status_ganisph'),
         ];
 
         try {
             $template = new TemplateProcessor($this->templatePath);
+
             foreach ($values as $key => $value) {
                 $template->setValue($key, $this->escape($value));
             }
+
             $template->saveAs($output);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             @unlink($output);
+
             throw new RuntimeException('Dokumen telaahan gagal dibuat: ' . $e->getMessage(), 0, $e);
         }
 
         return $output;
     }
 
-    /**
-     * @param \PhpOffice\PhpWord\Element\Table $table
-     */
-    private function addDataRow($table, string $label, string $placeholder): void
+    private function configureTempDir(): void
     {
-        $table->addRow();
-        $labelCell = $table->addCell(2600, ['bgColor' => 'F1F5F9']);
-        $labelCell->addText($label, [
-            'name' => 'Times New Roman',
-            'size' => 10,
-            'bold' => true,
-        ], ['spaceAfter' => 0]);
+        $directory = WRITEPATH . 'tmp';
 
-        $valueCell = $table->addCell(6500);
-        $valueCell->addText($placeholder, [
-            'name' => 'Times New Roman',
-            'size' => 10,
-        ], ['spaceAfter' => 0]);
+        if (! is_dir($directory) && ! mkdir($directory, 0775, true) && ! is_dir($directory)) {
+            throw new RuntimeException('Folder sementara aplikasi tidak dapat dibuat.');
+        }
+
+        if (! is_writable($directory)) {
+            throw new RuntimeException('Folder sementara aplikasi tidak dapat ditulis.');
+        }
+
+        PhpWordSettings::setTempDir($directory);
     }
 
-    private function nomorTelaahan(array $penugasan): string
+    private function convertTemplate(): void
     {
-        $date    = strtotime((string) ($penugasan['tanggal_surat'] ?? date('Y-m-d'))) ?: time();
-        $roman   = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
-        $month   = $roman[(int) date('n', $date) - 1];
-        $year    = date('Y', $date);
-        $number  = str_pad((string) ($penugasan['id'] ?? '1'), 3, '0', STR_PAD_LEFT);
+        $directory = dirname($this->templatePath);
+        if (! is_dir($directory) && ! mkdir($directory, 0775, true) && ! is_dir($directory)) {
+            throw new RuntimeException('Folder template tidak dapat dibuat.');
+        }
 
-        return "TEL-GANISPH/{$number}/{$month}/{$year}";
+        $tmp = $this->templatePath . '.tmp.' . bin2hex(random_bytes(4));
+
+        if (! @copy($this->sourcePath, $tmp)) {
+            throw new RuntimeException('Template sumber tidak dapat disalin ke folder tujuan.');
+        }
+
+        $zip = new ZipArchive();
+        if ($zip->open($tmp) !== true) {
+            @unlink($tmp);
+
+            throw new RuntimeException('Template DOCX tidak dapat dibuka.');
+        }
+
+        try {
+            $entries = [];
+            for ($index = 0; $index < $zip->numFiles; $index++) {
+                $entries[] = $zip->getNameIndex($index);
+            }
+
+            foreach ($entries as $entry) {
+                if (! preg_match('#^word/(document|header\d*|footer\d*)\.xml$#', (string) $entry)) {
+                    continue;
+                }
+
+                $xml = $zip->getFromName($entry);
+                if ($xml === false || $xml === '') {
+                    continue;
+                }
+
+                $converted = $this->convertXml($xml);
+                if ($converted !== null) {
+                    $zip->addFromString($entry, $converted);
+                }
+            }
+        } finally {
+            $zip->close();
+        }
+
+        if (! @rename($tmp, $this->templatePath)) {
+            if (! @copy($tmp, $this->templatePath)) {
+                @unlink($tmp);
+
+                throw new RuntimeException('Template DOCX tidak dapat disimpan.');
+            }
+
+            @unlink($tmp);
+        }
+
+        @chmod($this->templatePath, 0664);
+    }
+
+    private function convertXml(string $xml): ?string
+    {
+        $dom      = new DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $loaded   = $dom->loadXML($xml, LIBXML_NONET | LIBXML_COMPACT);
+
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        if (! $loaded) {
+            $converted = preg_replace_callback(
+                '/«([A-Z0-9_]+)»/u',
+                static fn (array $matches): string => '${' . $matches[1] . '}',
+                $xml
+            );
+
+            return is_string($converted) ? $converted : null;
+        }
+
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+
+        // Lepaskan struktur mail merge, pertahankan teks hasil tampilannya.
+        foreach (iterator_to_array($xpath->query('//w:fldChar')) as $node) {
+            $node->parentNode?->removeChild($node);
+        }
+
+        foreach (iterator_to_array($xpath->query('//w:instrText')) as $node) {
+            $node->parentNode?->removeChild($node);
+        }
+
+        foreach ($xpath->query('//w:t') as $textNode) {
+            $value = (string) ($textNode->nodeValue ?? '');
+
+            if (! str_contains($value, '«')) {
+                continue;
+            }
+
+            $textNode->nodeValue = preg_replace_callback(
+                '/«([A-Z0-9_]+)»/u',
+                static fn (array $matches): string => '${' . $matches[1] . '}',
+                $value
+            );
+        }
+
+        $output = $dom->saveXML();
+
+        return $output === false ? null : $output;
+    }
+
+    /**
+     * @param array<string, mixed> $penugasan
+     */
+    private function value(array $penugasan, string $field): string
+    {
+        $value = trim((string) ($penugasan[$field] ?? ''));
+
+        return $value === '' ? '-' : $value;
+    }
+
+    private function dateValue(mixed $value): string
+    {
+        $value = trim((string) ($value ?? ''));
+
+        if ($value === '') {
+            return '-';
+        }
+
+        return tanggal_id($value);
     }
 
     private function escape(string $value): string
     {
-        $escaped = htmlspecialchars($value, ENT_QUOTES | ENT_XML1, 'UTF-8');
-        $escaped = str_replace(["\r\n", "\r"], "\n", $escaped);
+        $value = str_replace(["\r\n", "\r"], "\n", $value);
+        $value = (string) preg_replace('/\s+/u', ' ', $value);
 
-        return $escaped;
+        return htmlspecialchars($value, ENT_QUOTES | ENT_XML1, 'UTF-8');
     }
 }

@@ -168,10 +168,24 @@ if (! function_exists('status_badge')) {
     function status_badge(?string $status): string
     {
         return match (strtolower((string) $status)) {
-            'selesai'  => '<span class="badge rounded-pill badge-soft-success"><i class="bi bi-check-circle-fill me-1"></i>Selesai</span>',
-            'dibatalkan' => '<span class="badge rounded-pill badge-soft-danger"><i class="bi bi-x-circle-fill me-1"></i>Dibatalkan</span>',
-            'draft'    => '<span class="badge rounded-pill badge-soft-secondary"><i class="bi bi-pencil-fill me-1"></i>Draft</span>',
-            default    => '<span class="badge rounded-pill badge-soft-primary"><i class="bi bi-activity me-1"></i>Aktif</span>',
+            'asn'       => '<span class="badge rounded-pill badge-soft-success"><i class="bi bi-person-badge-fill me-1"></i>ASN</span>',
+            'non-asn'   => '<span class="badge rounded-pill badge-soft-primary"><i class="bi bi-person-workspace me-1"></i>NON-ASN</span>',
+            'selesai'   => '<span class="badge rounded-pill badge-soft-success"><i class="bi bi-check-circle-fill me-1"></i>Selesai</span>',
+            'dibatalkan'=> '<span class="badge rounded-pill badge-soft-danger"><i class="bi bi-x-circle-fill me-1"></i>Dibatalkan</span>',
+            'draft'     => '<span class="badge rounded-pill badge-soft-secondary"><i class="bi bi-pencil-fill me-1"></i>Draft</span>',
+            default     => '<span class="badge rounded-pill badge-soft-secondary"><i class="bi bi-dash-circle me-1"></i>-</span>',
+        };
+    }
+}
+
+if (! function_exists('ket_badge')) {
+    function ket_badge(?string $ket): string
+    {
+        return match (strtoupper(trim((string) $ket))) {
+            'B1'    => '<span class="badge rounded-pill badge-soft-success">B1</span>',
+            'B2'    => '<span class="badge rounded-pill badge-soft-warning">B2</span>',
+            'B3'    => '<span class="badge rounded-pill badge-soft-info">B3</span>',
+            default => '<span class="badge rounded-pill badge-soft-secondary">-</span>',
         };
     }
 }

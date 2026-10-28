@@ -4,6 +4,12 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
+/**
+ * Tabel penugasan GANISPH mengikuti kolom berkas Excel resmi:
+ * PERUSAHAAN, E-NTT, TANGGAL, NAMA, NO. REG, MASA BERLAKU, KUALIFIKASI,
+ * KAB./KOTA, PROVINSI, JANGKA WAKTU PENUGASAN, JENIS IZIN, PEMBERI IZIN,
+ * NO IZIN, TANGGAL, KAPASITAS IZIN, STATUS GANISPH, KET.
+ */
 class CreatePenugasan extends Migration
 {
     public function up(): void
@@ -15,59 +21,105 @@ class CreatePenugasan extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'user_id' => [
-                'type'       => 'INTEGER',
-                'constraint' => 11,
-                'unsigned'   => true,
-                'null'       => true,
-            ],
-            'nama_pegawai' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 150,
-            ],
-            'nip' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 30,
-            ],
-            'jabatan' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 200,
-            ],
-            'nomor_surat' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 150,
-            ],
-            'tanggal_surat' => [
-                'type' => 'DATE',
-            ],
-            'nama_kegiatan' => [
+            'perusahaan' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
+                'null'       => true,
             ],
-            'peran' => [
+            'entt' => [
                 'type'       => 'VARCHAR',
-                'constraint' => 120,
+                'constraint' => 100,
+                'null'       => true,
             ],
-            'penyelenggara' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 200,
-            ],
-            'lokasi' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 200,
-            ],
-            'tanggal_mulai' => [
+            'tanggal' => [
                 'type' => 'DATE',
+                'null' => true,
             ],
-            'tanggal_selesai' => [
-                'type' => 'DATE',
-            ],
-            'status' => [
+            'nama' => [
                 'type'       => 'VARCHAR',
-                'constraint' => 20,
-                'default'    => 'Aktif',
+                'constraint' => 150,
+                'null'       => true,
             ],
-            'keterangan' => [
+            'no_reg' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 100,
+                'null'       => true,
+            ],
+            'masa_berlaku' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 150,
+                'null'       => true,
+            ],
+            'kualifikasi' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null'       => true,
+            ],
+            'kualifikasi_singkat' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+                'null'       => true,
+            ],
+            'kabkota' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 150,
+                'null'       => true,
+            ],
+            'provinsi' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 150,
+                'null'       => true,
+            ],
+            'jangka_waktu' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 150,
+                'null'       => true,
+            ],
+            'jenis_izin' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null'       => true,
+            ],
+            'jenis_izin_singkat' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+                'null'       => true,
+            ],
+            'pemberi_izin' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null'       => true,
+            ],
+            'no_izin' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null'       => true,
+            ],
+            'tanggal_izin' => [
+                'type' => 'DATE',
+                'null' => true,
+            ],
+            'kapasitas_izin' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null'       => true,
+            ],
+            'status_ganisph' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+                'null'       => true,
+            ],
+            'ket' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 150,
+                'null'       => true,
+            ],
+            'nilai_t' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 100,
+                'null'       => true,
+            ],
+            'catatan_u' => [
                 'type' => 'TEXT',
                 'null' => true,
             ],
@@ -88,10 +140,11 @@ class CreatePenugasan extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->addKey('user_id');
-        $this->forge->addKey('status');
-        $this->forge->addKey('tanggal_mulai');
-        $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'SET NULL');
+        $this->forge->addKey('nama');
+        $this->forge->addKey('no_reg');
+        $this->forge->addKey('no_izin');
+        $this->forge->addKey('status_ganisph');
+        $this->forge->addKey('tanggal');
         $this->forge->createTable('penugasan', true);
     }
 

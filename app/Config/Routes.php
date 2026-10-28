@@ -19,6 +19,7 @@ $routes->group('', ['filter' => 'auth'], static function ($routes): void {
     $routes->get('dashboard', 'Dashboard::index');
 
     $routes->get('penugasan', 'Penugasan::index');
+    $routes->get('daftar-penugasan', 'Penugasan::daftar');
     $routes->post('penugasan', 'Penugasan::save');
     $routes->post('penugasan/sync', 'Penugasan::sync');
     $routes->get('penugasan/download', 'Penugasan::downloadExcel');
@@ -26,7 +27,6 @@ $routes->group('', ['filter' => 'auth'], static function ($routes): void {
     $routes->post('penugasan/(:num)', 'Penugasan::update/$1');
     $routes->post('penugasan/(:num)/delete', 'Penugasan::delete/$1');
 
-    $routes->get('telaahan', 'Penugasan::telaahan');
     $routes->get('telaahan/(:num)/docx', 'Penugasan::downloadTelaahan/$1');
 
     $routes->get('pengaturan', 'Pengaturan::index');

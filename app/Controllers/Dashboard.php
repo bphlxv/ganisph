@@ -13,29 +13,24 @@ class Dashboard extends BaseController
         $userModel      = model(UserModel::class);
 
         $total      = $penugasanModel->countAllResults();
-        $aktif      = $penugasanModel->countByStatus('Aktif');
-        $selesai    = $penugasanModel->countByStatus('Selesai');
-        $dibatalkan = $penugasanModel->countByStatus('Dibatalkan');
+        $asn        = $penugasanModel->countByStatusGanisph('ASN');
+        $nonAsn     = $penugasanModel->countByStatusGanisph('NON-ASN');
+        $perusahaan = $penugasanModel->countPerusahaan();
 
-        $upcoming = $penugasanModel
-            ->where('status', 'Aktif')
-            ->where('tanggal_selesai >=', date('Y-m-d'))
-            ->orderBy('tanggal_mulai', 'ASC')
-            ->findAll(4);
+        $recent = $penugasanModel->latest(5);
 
         return $this->render('dashboard/index', [
             'stats' => [
                 'total'      => $total,
-                'aktif'      => $aktif,
-                'selesai'    => $selesai,
-                'dibatalkan' => $dibatalkan,
-                'pengguna'   => is_admin() ? $userModel->countAllResults() : null,
+                'asn'        => $asn,
+                'non_asn'    => $nonAsn,
+                'perusahaan' => $perusahaan,
+                'pengguna'   => is_admin() ? $userModel->countAllResults() : 0,
             ],
-            'recent'         => $penugasanModel->latest(5),
-            'upcoming'       => $upcoming,
-            'monthlyCounts'  => $penugasanModel->monthlyCounts(6),
-            'useChart'       => true,
-            'pageSubtitle'   => 'Ringkasan penugasan, agenda, dan aktivitas GANISPH.',
+            'recent'           => $recent,
+            'monthlyCounts'   => $penugasanModel->monthlyCounts(12),
+            'kualifikasi'      => $penugasanModel->countByKualifikasi(6),
+            'ketCounts'        => $penugasanModel->countByKet(),
         ], 'Dashboard');
     }
 }

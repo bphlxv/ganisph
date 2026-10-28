@@ -88,6 +88,7 @@ class Install extends BaseCommand
             WRITEPATH . 'excel',
             WRITEPATH . 'templates',
             WRITEPATH . 'telaahan',
+            WRITEPATH . 'tmp',
             WRITEPATH . 'backups',
             WRITEPATH . 'cache',
             WRITEPATH . 'logs',
@@ -166,8 +167,13 @@ class Install extends BaseCommand
     private function prepareFiles(): void
     {
         try {
-            $excel = new PenugasanExcel();
-            $excel->ensureFile();
+            $excel    = new PenugasanExcel();
+            $imported = $excel->ensureFile();
+
+            if ($imported > 0) {
+                CLI::write('Data awal dari dokumen Excel diimpor: ' . number_format($imported, 0, ',', '.') . ' baris.', 'green');
+            }
+
             CLI::write('Berkas Excel siap: ' . $this->relativePath($excel->path()), 'green');
         } catch (Throwable $e) {
             CLI::error('Berkas Excel gagal disiapkan: ' . $e->getMessage());

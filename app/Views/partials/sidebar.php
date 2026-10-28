@@ -28,12 +28,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="<?= site_url('telaahan') ?>" class="nav-link <?= sidebar_active('telaahan', 'telaahan/*') ?>">
-                        <i class="nav-icon bi bi-file-earmark-text"></i>
-                        <p>Telaahan Penugasan</p>
+                    <a href="<?= site_url('daftar-penugasan') ?>" class="nav-link <?= sidebar_active('daftar-penugasan', 'daftar-penugasan/*') ?>">
+                        <i class="nav-icon bi bi-table"></i>
+                        <p>Daftar Penugasan</p>
                     </a>
                 </li>
-
                 <li class="nav-header">PENGATURAN</li>
                 <li class="nav-item <?= sidebar_open('pengaturan', 'pengaturan/*') ?>">
                     <a href="#" class="nav-link <?= sidebar_active('pengaturan', 'pengaturan/*') ?>">

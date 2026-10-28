@@ -10,6 +10,11 @@ foreach ($monthlyCounts as $month => $count) {
     $chartLabels[] = nama_bulan((int) date('n', $timestamp), true) . ' ' . date('y', $timestamp);
     $chartValues[] = (int) $count;
 }
+
+$maxKualifikasi = 1;
+foreach ($kualifikasi as $item) {
+    $maxKualifikasi = max($maxKualifikasi, (int) $item['jumlah']);
+}
 ?>
 <div class="hero-card card mb-4">
     <div class="card-body">
@@ -18,15 +23,12 @@ foreach ($monthlyCounts as $month => $count) {
                 <span class="hero-eyebrow"><i class="bi bi-stars"></i> Dashboard GANISPH</span>
                 <h2 class="hero-title"><?= esc($greeting) ?>, <?= esc($currentUser['nama'] ?? 'Pengguna') ?>.</h2>
                 <p class="hero-text">
-                    Kelola penugasan, pantau agenda, dan terbitkan telaahan dalam satu alur kerja.
-                    Data penugasan tersimpan aman di database dan tercermin pada berkas Excel.
+                    Pantau data penugasan GANISPH, kualifikasi, dan status ASN/NON-ASN.
+                    Data tersimpan di database dan tercermin pada berkas Excel resmi.
                 </p>
                 <div class="hero-actions">
-                    <a href="<?= site_url('penugasan') ?>" class="btn btn-light hero-btn">
-                        <i class="bi bi-plus-lg me-2"></i>Buat Penugasan
-                    </a>
-                    <a href="<?= site_url('telaahan') ?>" class="btn btn-outline-light hero-btn">
-                        <i class="bi bi-file-earmark-text me-2"></i>Telaahan Penugasan
+                    <a href="<?= site_url('penugasan') ?>" class="btn btn-outline-light hero-btn">
+                        <i class="bi bi-plus-lg me-2"></i>Tambah Penugasan
                     </a>
                 </div>
             </div>
@@ -63,12 +65,12 @@ foreach ($monthlyCounts as $month => $count) {
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start gap-2">
                     <div>
-                        <div class="stat-label">Penugasan Aktif</div>
-                        <div class="stat-value"><?= number_format((int) $stats['aktif'], 0, ',', '.') ?></div>
+                        <div class="stat-label">GANISPH ASN</div>
+                        <div class="stat-value"><?= number_format((int) $stats['asn'], 0, ',', '.') ?></div>
                     </div>
-                    <span class="stat-icon stat-icon-cyan"><i class="bi bi-activity"></i></span>
+                    <span class="stat-icon stat-icon-cyan"><i class="bi bi-person-badge"></i></span>
                 </div>
-                <div class="stat-foot"><i class="bi bi-broadcast"></i> Sedang berjalan</div>
+                <div class="stat-foot"><i class="bi bi-check2-circle"></i> Berstatus ASN</div>
             </div>
         </div>
     </div>
@@ -77,12 +79,12 @@ foreach ($monthlyCounts as $month => $count) {
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start gap-2">
                     <div>
-                        <div class="stat-label">Selesai</div>
-                        <div class="stat-value"><?= number_format((int) $stats['selesai'], 0, ',', '.') ?></div>
+                        <div class="stat-label">GANISPH NON-ASN</div>
+                        <div class="stat-value"><?= number_format((int) $stats['non_asn'], 0, ',', '.') ?></div>
                     </div>
-                    <span class="stat-icon stat-icon-green"><i class="bi bi-check2-circle"></i></span>
+                    <span class="stat-icon stat-icon-green"><i class="bi bi-person-workspace"></i></span>
                 </div>
-                <div class="stat-foot"><i class="bi bi-flag"></i> Telah dilaksanakan</div>
+                <div class="stat-foot"><i class="bi bi-people"></i> Berstatus NON-ASN</div>
             </div>
         </div>
     </div>
@@ -91,12 +93,12 @@ foreach ($monthlyCounts as $month => $count) {
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start gap-2">
                     <div>
-                        <div class="stat-label">Dibatalkan</div>
-                        <div class="stat-value"><?= number_format((int) $stats['dibatalkan'], 0, ',', '.') ?></div>
+                        <div class="stat-label">Perusahaan</div>
+                        <div class="stat-value"><?= number_format((int) $stats['perusahaan'], 0, ',', '.') ?></div>
                     </div>
-                    <span class="stat-icon stat-icon-amber"><i class="bi bi-slash-circle"></i></span>
+                    <span class="stat-icon stat-icon-amber"><i class="bi bi-building"></i></span>
                 </div>
-                <div class="stat-foot"><i class="bi bi-x-circle"></i> Tidak dilanjutkan</div>
+                <div class="stat-foot"><i class="bi bi-briefcase"></i> Perusahaan unik</div>
             </div>
         </div>
     </div>
@@ -108,9 +110,9 @@ foreach ($monthlyCounts as $month => $count) {
             <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div>
                     <h3 class="card-title mb-0"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Tren Penugasan</h3>
-                    <div class="card-subtitle">Jumlah surat tugas per bulan</div>
+                    <div class="card-subtitle">Jumlah data berdasarkan tanggal formulir</div>
                 </div>
-                <span class="badge badge-soft-primary rounded-pill">6 bulan terakhir</span>
+                <span class="badge badge-soft-primary rounded-pill">12 bulan terakhir data</span>
             </div>
             <div class="card-body">
                 <div class="chart-wrapper">
@@ -130,15 +132,15 @@ foreach ($monthlyCounts as $month => $count) {
                     <span class="quick-icon quick-icon-blue"><i class="bi bi-journal-plus"></i></span>
                     <span class="quick-copy">
                         <strong>Penugasan GANISPH</strong>
-                        <small>Input, unduh, dan sinkronkan Excel</small>
+                        <small>Tambah dan perbarui data penugasan</small>
                     </span>
                     <i class="bi bi-arrow-right quick-arrow"></i>
                 </a>
-                <a href="<?= site_url('telaahan') ?>" class="quick-link">
-                    <span class="quick-icon quick-icon-cyan"><i class="bi bi-file-earmark-word"></i></span>
+                <a href="<?= site_url('daftar-penugasan') ?>" class="quick-link">
+                    <span class="quick-icon quick-icon-green"><i class="bi bi-table"></i></span>
                     <span class="quick-copy">
-                        <strong>Telaahan Penugasan</strong>
-                        <small>Unduh surat telaahan format DOCX</small>
+                        <strong>Daftar Penugasan</strong>
+                        <small>Lihat daftar dengan paginasi dan filter</small>
                     </span>
                     <i class="bi bi-arrow-right quick-arrow"></i>
                 </a>
@@ -172,9 +174,9 @@ foreach ($monthlyCounts as $month => $count) {
             <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div>
                     <h3 class="card-title mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Penugasan Terbaru</h3>
-                    <div class="card-subtitle">Data yang baru ditambahkan</div>
+                    <div class="card-subtitle">Berdasarkan tanggal formulir terbaru</div>
                 </div>
-                <a href="<?= site_url('penugasan') ?>" class="btn btn-sm btn-outline-primary rounded-pill">
+                <a href="<?= site_url('daftar-penugasan') ?>" class="btn btn-sm btn-outline-primary rounded-pill">
                     Lihat semua <i class="bi bi-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -184,7 +186,7 @@ foreach ($monthlyCounts as $month => $count) {
                         <span class="empty-icon"><i class="bi bi-journal-x"></i></span>
                         <h4>Belum ada penugasan</h4>
                         <p>Mulai dengan menambahkan data penugasan GANISPH pertama Anda.</p>
-                        <a href="<?= site_url('penugasan') ?>" class="btn btn-primary btn-sm">
+                        <a href="<?= site_url('penugasan') ?>" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-plus-lg me-1"></i>Tambah Penugasan
                         </a>
                     </div>
@@ -193,9 +195,10 @@ foreach ($monthlyCounts as $month => $count) {
                         <table class="table table-hover align-middle app-table mb-0">
                             <thead>
                                 <tr>
-                                    <th>Pegawai</th>
-                                    <th>Kegiatan</th>
-                                    <th>Periode</th>
+                                    <th>GANISPH</th>
+                                    <th>Perusahaan</th>
+                                    <th>Kualifikasi</th>
+                                    <th>Tanggal</th>
                                     <th>Status</th>
                                     <th class="text-end">Aksi</th>
                                 </tr>
@@ -205,26 +208,33 @@ foreach ($monthlyCounts as $month => $count) {
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center gap-2">
-                                                <span class="avatar-circle avatar-sm avatar-tone-<?= esc(avatar_tone($row['nama_pegawai'])) ?>">
-                                                    <?= esc(user_initials($row['nama_pegawai'])) ?>
+                                                <span class="avatar-circle avatar-sm avatar-tone-<?= esc(avatar_tone($row['nama'])) ?>">
+                                                    <?= esc(user_initials($row['nama'])) ?>
                                                 </span>
                                                 <div class="min-w-0">
-                                                    <div class="fw-semibold text-truncate"><?= esc($row['nama_pegawai']) ?></div>
-                                                    <small class="text-body-secondary"><?= esc($row['nip']) ?></small>
+                                                    <div class="fw-semibold text-truncate"><?= esc($row['nama']) ?></div>
+                                                    <small class="text-body-secondary">No. Reg <?= esc($row['no_reg']) ?></small>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="cell-main text-truncate" title="<?= esc($row['nama_kegiatan']) ?>"><?= esc($row['nama_kegiatan']) ?></div>
-                                            <small class="text-body-secondary"><?= esc($row['nomor_surat']) ?></small>
+                                            <div class="cell-main text-truncate" title="<?= esc($row['perusahaan']) ?>"><?= esc($row['perusahaan']) ?></div>
+                                            <small class="text-body-secondary">E-NTT <?= esc($row['entt']) ?></small>
                                         </td>
-                                        <td class="text-nowrap">
-                                            <div class="small fw-medium"><?= esc(tanggal_singkat($row['tanggal_mulai'])) ?></div>
-                                            <small class="text-body-secondary">s.d. <?= esc(tanggal_singkat($row['tanggal_selesai'])) ?></small>
+                                        <td>
+                                            <div class="fw-medium"><?= esc($row['kualifikasi_singkat']) ?></div>
+                                            <small class="text-body-secondary"><?= esc($row['kabkota']) ?></small>
                                         </td>
-                                        <td><?= status_badge($row['status']) ?></td>
+                                        <td class="text-nowrap"><?= esc(tanggal_singkat($row['tanggal'])) ?></td>
+                                        <td>
+                                            <div class="d-flex flex-column gap-1 align-items-start">
+                                                <?= status_badge($row['status_ganisph']) ?>
+                                                <?= ket_badge($row['ket']) ?>
+                                            </div>
+                                        </td>
                                         <td class="text-end">
-                                            <a href="<?= site_url('penugasan/' . (int) $row['id'] . '/edit') ?>" class="btn btn-sm btn-icon btn-light" title="Edit penugasan">
+                                            <a href="<?= site_url('penugasan/' . (int) $row['id'] . '/edit') ?>"
+                                               class="btn btn-sm btn-icon btn-light" title="Edit penugasan">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                         </td>
@@ -240,46 +250,51 @@ foreach ($monthlyCounts as $month => $count) {
 
     <div class="col-xl-4">
         <div class="card h-100">
-            <div class="card-header d-flex align-items-center justify-content-between">
-                <div>
-                    <h3 class="card-title mb-0"><i class="bi bi-calendar-event me-2 text-primary"></i>Agenda Terdekat</h3>
-                    <div class="card-subtitle">Penugasan aktif yang akan datang</div>
-                </div>
-                <span class="badge badge-soft-info rounded-pill"><?= count($upcoming) ?></span>
+            <div class="card-header">
+                <h3 class="card-title mb-0"><i class="bi bi-pie-chart me-2 text-primary"></i>Sebaran Kualifikasi</h3>
+                <div class="card-subtitle">Enam kualifikasi terbanyak</div>
             </div>
             <div class="card-body">
-                <?php if ($upcoming === []): ?>
+                <?php if ($kualifikasi === []): ?>
                     <div class="empty-state empty-compact">
-                        <span class="empty-icon"><i class="bi bi-calendar2-week"></i></span>
-                        <h4>Tidak ada agenda</h4>
-                        <p>Belum ada penugasan aktif yang terjadwal.</p>
+                        <span class="empty-icon"><i class="bi bi-bar-chart"></i></span>
+                        <h4>Belum ada data</h4>
+                        <p>Sebaran kualifikasi akan tampil setelah data tersedia.</p>
                     </div>
                 <?php else: ?>
-                    <div class="agenda-list">
-                        <?php foreach ($upcoming as $item): ?>
-                            <?php $start = strtotime($item['tanggal_mulai']) ?: time(); ?>
-                            <a href="<?= site_url('penugasan/' . (int) $item['id'] . '/edit') ?>" class="agenda-item">
-                                <span class="agenda-date">
-                                    <strong><?= date('d', $start) ?></strong>
-                                    <small><?= esc(nama_bulan((int) date('n', $start), true)) ?></small>
-                                </span>
-                                <span class="agenda-copy">
-                                    <strong class="text-truncate"><?= esc($item['nama_kegiatan']) ?></strong>
-                                    <small><i class="bi bi-person me-1"></i><?= esc($item['nama_pegawai']) ?></small>
-                                    <small><i class="bi bi-geo-alt me-1"></i><?= esc($item['lokasi']) ?></small>
-                                </span>
-                            </a>
+                    <div class="d-flex flex-column gap-3">
+                        <?php foreach ($kualifikasi as $item): ?>
+                            <?php $percent = (int) round(((int) $item['jumlah'] / $maxKualifikasi) * 100); ?>
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center small mb-1">
+                                    <strong><?= esc($item['kualifikasi_singkat']) ?></strong>
+                                    <span class="text-body-secondary"><?= number_format((int) $item['jumlah'], 0, ',', '.') ?></span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar" role="progressbar"
+                                         style="width: <?= $percent ?>%"
+                                         aria-valuenow="<?= $percent ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
-            </div>
-            <?php if ($upcoming !== []): ?>
-                <div class="card-footer bg-transparent text-center">
-                    <a href="<?= site_url('penugasan') ?>" class="small link-primary text-decoration-none">
-                        Lihat seluruh penugasan <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
+
+                <hr class="my-4">
+
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="fw-semibold small">Kategori KET.</span>
+                    <span class="text-body-secondary small">Jumlah</span>
                 </div>
-            <?php endif; ?>
+                <div class="d-flex flex-column gap-2">
+                    <?php foreach ($ketCounts as $ket => $count): ?>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <?= ket_badge($ket) ?>
+                            <span class="small fw-medium"><?= number_format((int) $count, 0, ',', '.') ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         </div>
     </div>
 </div>

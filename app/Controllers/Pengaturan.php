@@ -207,27 +207,6 @@ class Pengaturan extends BaseController
             return redirect()->back()->withInput()->with('error', 'Data pengguna gagal diperbarui.');
         }
 
-        $identityChanged = $input['nama'] !== $user['nama']
-            || $input['nip'] !== $user['nip']
-            || $input['jabatan'] !== $user['jabatan'];
-
-        if ($identityChanged) {
-            $db = db_connect();
-            $db->table('penugasan')
-                ->where('user_id', $id)
-                ->update([
-                    'nama_pegawai' => $input['nama'],
-                    'nip'          => $input['nip'],
-                    'jabatan'      => $input['jabatan'],
-                ]);
-
-            try {
-                (new \App\Libraries\PenugasanExcel())->refreshFromDatabase();
-            } catch (\Throwable $e) {
-                session()->setFlashdata('warning', 'Data pengguna tersimpan, tetapi file Excel gagal diperbarui: ' . $e->getMessage());
-            }
-        }
-
         if ($id === (int) auth_id() && ! $isAdmin) {
             return redirect()->to(site_url('dashboard'))->with(
                 'success',

@@ -140,7 +140,7 @@ $isAdminValue = old('is_admin', $isEdit ? (int) $user['is_admin'] : 0);
                 <ul class="tips-list">
                     <li>Nama, NIP, dan jabatan wajib diisi.</li>
                     <li>NIP harus unik dan hanya berisi angka.</li>
-                    <li>Data pegawai otomatis dipakai pada form penugasan.</li>
+                    <li>Akun pengguna dipakai untuk login dan pencatatan pembuat data penugasan.</li>
                     <li>Centang administrator untuk memberi akses penuh.</li>
                     <li>Minimal satu administrator harus selalu tersedia.</li>
                 </ul>
